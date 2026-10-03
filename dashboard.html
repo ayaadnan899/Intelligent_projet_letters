@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Ministère Aménagement du Territoire</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #f5f7fc; min-height: 100vh; transition: all 0.3s ease; }
+        
+        /* DARK MODE */
+        body.dark-mode {
+            background: #0f0f1a;
+        }
+        body.dark-mode .sidebar,
+        body.dark-mode .main-header,
+        body.dark-mode .stat-card,
+        body.dark-mode .card,
+        body.dark-mode .chart-card,
+        body.dark-mode .modal-content,
+        body.dark-mode .action-bar,
+        body.dark-mode .stat-mini-card {
+            background: #1a1a2e;
+            border-color: #2a2a3e;
+        }
+        body.dark-mode .menu-item { color: #a0a0b0; }
+        body.dark-mode .menu-item.active { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; }
+        body.dark-mode .stat-value,
+        body.dark-mode .user-name,
+        body.dark-mode .header-title h1 { color: white; }
+        body.dark-mode th,
+        body.dark-mode td { border-bottom-color: #2a2a3e; color: #ccc; }
+        body.dark-mode th { background: #252540; color: #a855f7; }
+        body.dark-mode .search-input,
+        body.dark-mode .filter-select { background: #252540; border-color: #3a3a5e; color: white; }
+        body.dark-mode .status-tab { background: #252540; border-color: #3a3a5e; color: #ccc; }
+        body.dark-mode .status-tab.active { background: #7c3aed; color: white; }
+        body.dark-mode .filters-container { background: #252540; }
+        body.dark-mode .selection-info { background: #3a2a5e; }
+        body.dark-mode .table-container table tbody tr:hover { background: #2a2a3e; }
+        
+        /* Dark Mode Toggle */
+        .dark-mode-toggle {
+            background: #f0f0f0;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        body.dark-mode .dark-mode-toggle {
+            background: #2a2a3e;
+            color: white;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            border-right: 1px solid #eef2f6;
+            transition: all 0.3s ease;
+        }
+        .sidebar-header { padding: 25px 20px; text-align: center; border-bottom: 1px solid #eef2f6; }
+        .sidebar-header h2 { font-size: 20px; font-weight: 700; background: linear-gradient(135deg, #7c3aed, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .sidebar-header p { font-size: 11px; color: #8895a7; margin-top: 5px; }
+        .sidebar-menu { padding: 20px 15px; }
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #5a6e7c;
+        }
+        .menu-item:hover { background: #f5f0ff; color: #7c3aed; }
+        .menu-item.active { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; box-shadow: 0 4px 15px rgba(124,58,237,0.3); }
+        .menu-icon { font-size: 18px; width: 24px; }
+        .menu-text { font-size: 14px; font-weight: 500; flex: 1; }
+        .menu-badge { background: #ef4444; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; color: white; }
+        .sidebar-footer { position: absolute; bottom: 20px; left: 0; right: 0; padding: 20px; text-align: center; border-top: 1px solid #eef2f6; font-size: 11px; color: #8895a7; }
+        
+        /* Main Content */
+        .main-content { margin-left: 280px; padding: 25px 30px; }
+        
+        /* Header */
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px 25px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid #eef2f6;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .header-title h1 { font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #7c3aed, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header-title p { color: #8895a7; font-size: 14px; margin-top: 5px; }
+        
+        /* User Info */
+        .user-info { display: flex; align-items: center; gap: 20px; }
+        .notification-bell { position: relative; cursor: pointer; }
+        .notification-bell i { font-size: 22px; color: #7c3aed; }
+        .notif-count { position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; min-width: 18px; text-align: center; }
+        .user-profile { display: flex; align-items: center; gap: 12px; }
+        .user-avatar { width: 45px; height: 45px; background: linear-gradient(135deg, #7c3aed, #a855f7); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; }
+        .user-name { font-weight: 600; color: #2c3e50; }
+        .user-role { font-size: 12px; color: #8895a7; margin-top: 2px; }
+        .logout-btn { background: #ef4444; color: white; border: none; padding: 8px 18px; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all 0.3s; }
+        
+        /* Stats Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            border: 1px solid #eef2f6;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+        }
+        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(124,58,237,0.12); }
+        .stat-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .stat-title { font-size: 14px; font-weight: 600; color: #8895a7; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-icon { font-size: 32px; opacity: 0.7; color: #7c3aed; }
+        .stat-value { font-size: 36px; font-weight: 800; color: #4c1d95; margin-bottom: 8px; }
+        .stat-trend { font-size: 12px; display: flex; align-items: center; gap: 4px; }
+        .stat-trend.positive { color: #10b981; }
+        .stat-trend.negative { color: #ef4444; }
+        
+        /* Stats mini pour traitement */
+        .stat-mini-card {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #eef2f6;
+        }
+        .stat-mini-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+        
+        /* Search & Filters */
+        .search-bar-advanced {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .search-input { flex: 2; padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 12px; font-size: 14px; background: white; transition: all 0.3s; }
+        .search-input:focus { border-color: #7c3aed; outline: none; box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+        .date-input { padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 12px; font-size: 14px; background: white; }
+        .filter-select { padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 12px; background: white; cursor: pointer; }
+        .btn-clear { background: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 500; transition: all 0.3s; }
+        .btn-clear:hover { background: #5a6268; transform: translateY(-2px); }
+        
+        /* Cards - Style amélioré pour les graphiques */
+        .card, .chart-card { 
+            background: white; 
+            border-radius: 25px; 
+            padding: 25px; 
+            margin-bottom: 25px; 
+            border: 1px solid #eef2f6; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05); 
+            transition: all 0.3s ease; 
+        }
+        .card:hover, .chart-card:hover { 
+            box-shadow: 0 8px 30px rgba(124,58,237,0.08); 
+            transform: translateY(-2px);
+        }
+        .card-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px; 
+            padding-bottom: 15px; 
+            border-bottom: 1px solid #eef2f6; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+        }
+        .card-header h3 { 
+            font-size: 18px; 
+            font-weight: 600; 
+            color: #5b21b6; 
+        }
+        
+        /* Style des titres des graphiques - UNIQUEMENT UNE ICÔNE */
+        .chart-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #5b2cff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chart-card h3 i {
+            font-size: 22px;
+            margin-right: 5px;
+        }
+        .chart-card h3 .emoji-only {
+            display: none;
+        }
+        .chart-card img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+        }
+        
+        /* Tables - Style amélioré */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 16px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 14px 16px;
+            text-align: left;
+            border-bottom: 1px solid #eef2f6;
+        }
+        th {
+            background: #faf5ff;
+            font-weight: 600;
+            color: #6d28d9;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+        }
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+        tbody tr:hover {
+            background: #faf5ff;
+            transform: scale(1.01);
+        }
+        body.dark-mode tbody tr:hover {
+            background: #2a2a3e;
+        }
+        
+        /* Buttons */
+        .btn-add, .btn-primary {
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        .btn-add:hover, .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(124,58,237,0.3);
+        }
+        .btn-add:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(239,68,68,0.3);
+        }
+        
+        /* Badges */
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .badge-en_attente { background: #fff3cd; color: #856404; }
+        .badge-traite { background: #d4edda; color: #155724; }
+        .badge-urgent { background: #f8d7da; color: #721c24; }
+        .badge-archive { background: #d1ecf1; color: #0c5460; }
+        .badge-juridique { background: #e0f7fa; color: #006064; }
+        .badge-financier { background: #e8eaf6; color: #1a237e; }
+        .badge-normal { background: #e0e0e0; color: #424242; }
+        .badge-encours { background: #cff4fc; color: #055160; }
+        
+        .priority-high {
+            background: #dc3545;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .priority-medium {
+            background: #ffc107;
+            color: #333;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .priority-low {
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .text-success { color: #10b981; }
+        .text-warning { color: #f59e0b; }
+        .text-danger { color: #ef4444; }
+        
+        .checkbox-col { width: 40px; text-align: center; }
+        .traitement-checkbox { width: 18px; height: 18px; cursor: pointer; }
+        
+        /* Filters container */
+        .filters-container {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 16px;
+        }
+        .filters-container input,
+        .filters-container select {
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .filters-container input:focus,
+        .filters-container select:focus {
+            border-color: #8b5cf6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+        
+        .selection-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            background: #f3e8ff;
+            border-radius: 12px;
+        }
+        
+        /* PDF Preview */
+        .pdf-preview-modal .modal-content { max-width: 800px; max-height: 90vh; }
+        .pdf-preview-iframe { width: 100%; height: 500px; border: none; border-radius: 12px; }
+        
+        /* Timeline */
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(135deg, #7c3aed, #a855f7);
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+            padding-left: 20px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #7c3aed;
+            border: 2px solid white;
+        }
+        .timeline-date { font-size: 11px; color: #8895a7; margin-bottom: 5px; }
+        .timeline-content { font-size: 13px; }
+        .timeline-user { font-weight: 600; color: #7c3aed; }
+        
+        /* Charts */
+        .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin-bottom: 25px; }
+        canvas { max-height: 250px; width: 100% !important; }
+        
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 20px; padding: 25px; max-width: 700px; width: 90%; max-height: 85vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee; }
+        .close-modal { cursor: pointer; font-size: 24px; color: #999; }
+        
+        /* Tabs dans modal */
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active {
+            color: #8b5cf6;
+            border-bottom: 2px solid #8b5cf6;
+        }
+        .tab-btn:hover:not(.active) {
+            color: #6d28d9;
+            background: #f3e8ff;
+            border-radius: 8px;
+        }
+        
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed #7c3aed;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }
+        .upload-area.drag-over { background: #f3e8ff; border-color: #a855f7; transform: scale(1.02); }
+        .upload-icon { font-size: 48px; margin-bottom: 10px; }
+        .preview-image { max-width: 100%; max-height: 150px; border-radius: 12px; margin-top: 10px; }
+        
+        /* Progress Bar */
+        .progress-bar { width: 100%; height: 6px; background: #e0e0e0; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #7c3aed, #a855f7); width: 0%; transition: width 0.3s; }
+        
+        /* Notification */
+        .notification { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 12px; color: white; z-index: 2000; animation: slideIn 0.3s ease; }
+        .notification.success { background: #28a745; }
+        .notification.error { background: #dc3545; }
+        .notification.info { background: #17a2b8; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* Pagination */
+        .pagination { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
+        .pagination button { padding: 8px 16px; border: none; border-radius: 10px; cursor: pointer; background: #7c3aed; color: white; font-weight: 500; transition: all 0.3s; }
+        .pagination button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(124,58,237,0.3); }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        /* Form */
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: 500; color: #333; }
+        .form-control { width: 100%; padding: 10px 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; transition: all 0.3s; }
+        .form-control:focus { border-color: #7c3aed; outline: none; box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            margin: 0 3px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            transform: scale(1.1);
+            background: rgba(0,0,0,0.05);
+        }
+        .btn-view { color: #7c3aed; }
+        .btn-edit { color: #f59e0b; }
+        .btn-delete { color: #dc3545; }
+        .btn-archive { color: #06b6d4; }
+        .btn-scan { color: #7c3aed; }
+        .btn-pdf { color: #dc3545; }
+        
+        /* AI Summary */
+        .ai-summary {
+            background: linear-gradient(135deg, #7c3aed20, #a855f720);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 3px solid #7c3aed;
+        }
+        
+        /* Hidden elements */
+        .hidden { display: none !important; }
+        
+        /* Loading animation */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #7c3aed;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        /* Grille des graphiques matplotlib */
+        .matplotlib-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 70px; }
+            .sidebar .menu-text, .sidebar-header p, .sidebar-footer { display: none; }
+            .main-content { margin-left: 70px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .matplotlib-grid { grid-template-columns: 1fr !important; }
+            th, td { padding: 10px 12px; }
+            .chart-card h3 { font-size: 17px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>🏛️ MATNUHPV</h2>
+                <p>Ministère Aménagement</p>
+            </div>
+            <div class="sidebar-menu">
+                <div class="menu-item active" data-tab="dashboard"><span class="menu-icon">📊</span><span class="menu-text">Tableau de bord</span></div>
+                <div class="menu-item" data-tab="courriers"><span class="menu-icon">📬</span><span class="menu-text">Courriers</span><span class="menu-badge" id="courrierBadge">0</span></div>
+                <div class="menu-item assignation-only hidden" data-tab="assignation"><span class="menu-icon">📨</span><span class="menu-text">Assignation</span></div>
+                <div class="menu-item traitement-only hidden" data-tab="traitement"><span class="menu-icon">✅</span><span class="menu-text">Traitement</span><span class="menu-badge" id="traitementBadge">0</span></div>
+                <div class="menu-item stats-only hidden" data-tab="statistiques"><span class="menu-icon">📈</span><span class="menu-text">Statistiques</span></div>
+                <div class="menu-item analytics-only hidden" data-tab="analytics"><span class="menu-icon">🤖</span><span class="menu-text">Analytiques IA</span></div>
+                <div class="menu-item audit-only hidden" data-tab="audit"><span class="menu-icon">🔐</span><span class="menu-text">Audit trail</span></div>
+                <div class="menu-item export-only hidden" data-tab="export"><span class="menu-icon">📄</span><span class="menu-text">Export</span></div>
+            </div>
+            <div class="sidebar-footer">
+                <p>Ministère Aménagement</p>
+                <p>Version 3.0 - IA</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="main-header">
+                <div class="header-title">
+                    <h1>Hello, <span id="username">Chargement...</span></h1>
+                    <p>Bienvenue dans votre espace de gestion des courriers</p>
+                </div>
+                <div class="user-info">
+                    <button class="dark-mode-toggle" onclick="toggleDarkMode()"><i class="fas fa-moon"></i> Dark Mode</button>
+                    <div class="notification-bell" onclick="showNotifications()"><i class="fas fa-bell"></i><span class="notif-count" id="notifCount" style="display: none;">0</span></div>
+                    <div class="user-profile"><div class="user-avatar" id="userAvatar">👤</div><div><div class="user-name" id="userName">Chargement...</div><div class="user-role" id="userRole">Rôle</div></div></div>
+                    <button class="logout-btn" onclick="logout()">Déconnexion</button>
+                </div>
+            </div>
+
+            <!-- DASHBOARD TAB -->
+            <div id="dashboardTab" class="tab-content active">
+                <div class="stats-grid" id="statsGrid"></div>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-pie" style="color: #7c3aed;"></i> Répartition par statut</h3>
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3><i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i> Répartition par priorité</h3>
+                        <canvas id="priorityChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="card-header"><h3>📋 Derniers courriers</h3></div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Date</th><th>Expéditeur</th><th>Objet</th>
+                                    <th>Classification IA</th><th>Statut</th><th>Priorité</th>
+                                    <th>Score OCR</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentCourriers"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COURRIERS TAB -->
+            <div id="courriersTab" class="tab-content">
+                <div class="card"><div class="card-header"><h3>📬 Gestion des courriers</h3><button class="btn-add scan-only hidden" onclick="openScanModal()">📸 Scanner un courrier</button></div>
+                <div class="search-bar-advanced">
+                    <input type="text" class="search-input" id="searchInput" placeholder="🔍 Rechercher par expéditeur ou objet..." onkeyup="loadCourriers()">
+                    <input type="date" class="date-input" id="dateStartFilter" onchange="loadCourriers()" placeholder="Date début">
+                    <input type="date" class="date-input" id="dateEndFilter" onchange="loadCourriers()" placeholder="Date fin">
+                    <select class="filter-select" id="statusFilter" onchange="loadCourriers()">
+                        <option value="all">📊 Tous statuts</option>
+                        <option value="en_attente">⏳ En attente</option>
+                        <option value="traite">✅ Traité</option>
+                        <option value="urgent">🚨 Urgent</option>
+                        <option value="archive">📦 Archivé</option>
+                    </select>
+                    <select class="filter-select" id="priorityFilter" onchange="loadCourriers()">
+                        <option value="all">⭐ Toutes priorités</option>
+                        <option value="high">🔴 Haute</option>
+                        <option value="medium">🟡 Moyenne</option>
+                        <option value="low">🟢 Basse</option>
+                    </select>
+                    <button class="btn-clear" onclick="clearFilters()">Effacer filtres</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>ID</th><th>Date</th><th>Expéditeur</th><th>Objet</th><th>Classification IA</th><th>Priorité</th><th>Statut</th><th>Score OCR</th><th>Actions</th></tr></thead>
+                        <tbody id="courriersTableBody"></tbody>
+                    </table>
+                </div>
+                <div class="pagination"><button onclick="previousPage()" id="prevBtn">◀</button><span id="pageInfo">Page 1</span><button onclick="nextPage()" id="nextBtn">▶</button></div></div>
+            </div>
+
+            <!-- ASSIGNATION TAB -->
+            <div id="assignationTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header"><h3>📋 Courriers en attente d'assignation</h3></div>
+                    <div class="table-container">
+                        <table style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Expéditeur</th>
+                                    <th>Objet</th>
+                                    <th>Classification</th>
+                                    <th>Priorité</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pendingCourriersTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TRAITEMENT TAB -->
+            <div id="traitementTab" class="tab-content">
+                <div class="stats-mini-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px;">
+                    <div class="stat-mini-card"><div style="font-size: 28px; font-weight: 800; color: #667eea;" id="totalATraiter">0</div><div style="font-size: 12px; color: #666;">À traiter</div></div>
+                    <div class="stat-mini-card"><div style="font-size: 28px; font-weight: 800; color: #ef4444;" id="urgentsCount">0</div><div style="font-size: 12px; color: #666;">Urgents</div></div>
+                    <div class="stat-mini-card"><div style="font-size: 28px; font-weight: 800; color: #10b981;" id="traitesAujourdhui">0</div><div style="font-size: 12px; color: #666;">Traités aujourd'hui</div></div>
+                    <div class="stat-mini-card"><div style="font-size: 28px; font-weight: 800; color: #8b5cf6;" id="delaiMoyen">0</div><div style="font-size: 12px; color: #666;">Délai moyen (jours)</div></div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3><i class="fas fa-check-circle" style="color: #10b981;"></i> Gestion des traitements</h3>
+                        <button class="btn-add" id="btnTraiterSelection" onclick="openMultipleTraiterModal()" disabled style="background: #10b981;"><i class="fas fa-check-double"></i> Traiter sélection</button>
+                    </div>
+                    <div class="filters-container">
+                        <div style="flex: 1; min-width: 150px;"><label style="font-size: 12px; color: #666;">🔍 Recherche</label><input type="text" id="traitementSearchInput" class="search-input" placeholder="Expéditeur, objet..." onkeyup="filterTraitementCourriers()"></div>
+                        <div style="min-width: 130px;"><label style="font-size: 12px; color: #666;">📊 Statut</label><select id="traitementStatusFilter" class="filter-select" onchange="filterTraitementCourriers()"><option value="all">Tous</option><option value="en_attente">En attente</option><option value="urgent">Urgent</option></select></div>
+                        <div style="min-width: 130px;"><label style="font-size: 12px; color: #666;">⭐ Priorité</label><select id="traitementPriorityFilter" class="filter-select" onchange="filterTraitementCourriers()"><option value="all">Toutes</option><option value="high">Haute</option><option value="medium">Moyenne</option><option value="low">Basse</option></select></div>
+                        <div style="min-width: 140px;"><label style="font-size: 12px; color: #666;">🤖 Classification</label><select id="traitementClassificationFilter" class="filter-select" onchange="filterTraitementCourriers()"><option value="all">Toutes</option><option value="urgent">Urgent</option><option value="juridique">Juridique</option><option value="financier">Financier</option><option value="normal">Normal</option></select></div>
+                        <div style="display: flex; align-items: flex-end;"><button class="btn-clear" onclick="clearTraitementFilters()">Effacer</button></div>
+                    </div>
+                    <div class="selection-info"><span id="traitementSelectedInfo">✅ 0 sélectionné(s)</span>
+                        <button class="btn-add" onclick="toggleSelectAllTraitement()" style="padding: 5px 12px;">Tout sélectionner</button>
+                    </div>
+                    <div class="table-container">
+                        <table style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th class="checkbox-col"><input type="checkbox" id="selectAllTraitementCheckbox" onchange="toggleSelectAllFromCheckboxTraitement()"></th>
+                                    <th>ID</th><th>Date</th><th>Expéditeur</th><th>Objet</th><th>Classification</th><th>Priorité</th><th>Statut</th><th>Délai</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="traitementCourriersTable"></tbody>
+                        </table>
+                    </div>
+                    <div class="pagination"><button onclick="previousPageTraitement()" id="prevBtnTraitement">◀ Précédent</button><span id="pageInfoTraitement" style="margin: 0 15px;">Page 1</span><button onclick="nextPageTraitement()" id="nextBtnTraitement">Suivant ▶</button></div>
+                </div>
+            </div>
+
+            <!-- STATISTIQUES TAB - AVEC GRAPHIQUES MATPLOTLIB STYLE DASHBOARD (SANS DOUBLES ICÔNES) -->
+            <div id="statistiquesTab" class="tab-content">
+                <!-- Stats rapides -->
+                <div class="stats-grid" style="margin-bottom: 25px;">
+                    <div class="stat-card">
+                        <div class="stat-header"><span class="stat-title">📬 Total</span><span class="stat-icon">📊</span></div>
+                        <div class="stat-value" id="statTotal">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><span class="stat-title">⏳ En attente</span><span class="stat-icon">⏰</span></div>
+                        <div class="stat-value" id="statEnAttente">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><span class="stat-title">✅ Traités</span><span class="stat-icon">✓</span></div>
+                        <div class="stat-value" id="statTraites">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header"><span class="stat-title">🚨 Urgents</span><span class="stat-icon">⚠️</span></div>
+                        <div class="stat-value" id="statUrgents">0</div>
+                    </div>
+                </div>
+
+                <!-- Graphiques matplotlib style dashboard (SANS DOUBLES ICÔNES) -->
+                <div class="matplotlib-grid" id="matplotlibCharts">
+                    <div class="loading-charts" style="text-align:center; padding:40px; grid-column: 1/-1;">
+                        <div class="loading-spinner"></div>
+                        <p style="color:#8895a7;">Chargement des graphiques avancés...</p>
+                    </div>
+                </div>
+
+                <!-- Anciens graphiques Chart.js (conservés - SANS DOUBLES ICÔNES) -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-chart-line" style="color: #7c3aed;"></i> Évolution mensuelle</h3>
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3><i class="fas fa-trophy" style="color: #f59e0b;"></i> Top expéditeurs</h3>
+                        <canvas id="topExpediteursChart"></canvas>
+                    </div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-robot" style="color: #7c3aed;"></i> Classification IA</h3>
+                        <canvas id="classificationChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3><i class="fas fa-rocket" style="color: #10b981;"></i> Performance mensuelle</h3>
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS IA TAB -->
+            <div id="analyticsTab" class="tab-content">
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3><i class="fas fa-brain" style="color: #7c3aed;"></i> Prédiction ML (30 jours)</h3>
+                        <canvas id="mlPredictionChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3><i class="fas fa-clock" style="color: #f59e0b;"></i> Distribution horaire</h3>
+                        <canvas id="hourlyChart"></canvas>
+                    </div>
+                </div>
+                <div class="card"><div class="card-header"><h3>💡 Suggestions intelligentes</h3></div><div id="mlSuggestionsList"></div></div>
+            </div>
+
+            <!-- AUDIT TAB -->
+            <div id="auditTab" class="tab-content">
+                <div class="card"><div class="card-header"><h3>🔐 Journal d'audit - Timeline</h3><button class="btn-add" onclick="refreshAuditLogs()">🔄 Rafraîchir</button></div>
+                <div class="timeline" id="auditTimeline"></div></div>
+            </div>
+
+            <!-- EXPORT TAB -->
+            <div id="exportTab" class="tab-content">
+                <div class="card"><div class="card-header"><h3>📄 Export PDF</h3></div>
+                <div style="padding:20px; text-align:center;"><button class="btn-add" onclick="exportAllToPDF()" style="background:#dc3545;">📑 Exporter tous les courriers</button><div id="exportStatus" style="margin-top:20px;"></div></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="scanModal" class="modal"><div class="modal-content"><div class="modal-header"><h2>📸 Scanner un courrier</h2><span class="close-modal" onclick="closeScanModal()">&times;</span></div><div class="upload-area" id="uploadArea"><div class="upload-icon">📁</div><p>Déposez l'image du courrier</p><input type="file" id="fileInput" style="display:none" accept="image/*,application/pdf" onchange="handleFileUpload(this.files[0])"></div><div id="previewContainer" style="display:none;"><img id="previewImage" class="preview-image"></div><div id="scanProgress" style="display:none;"><div class="progress-bar"><div class="progress-fill" id="scanProgressFill"></div></div><p>Analyse OCR en cours...</p></div><div id="scanResult" style="display:none;"><div id="ocrConfidence"></div><div id="aiClassification"></div><div id="aiSummary" class="ai-summary"></div><div><strong>📝 Texte extrait:</strong></div><div id="extractedText"></div><button class="btn-add" onclick="saveScannedCourrier()">💾 Enregistrer</button></div></div></div>
+    <div id="pdfPreviewModal" class="modal pdf-preview-modal"><div class="modal-content"><div class="modal-header"><h3>📄 Aperçu PDF</h3><span class="close-modal" onclick="closePdfPreview()">&times;</span></div><iframe id="pdfPreviewIframe" class="pdf-preview-iframe" src=""></iframe><button class="btn-add" onclick="downloadCurrentPdf()">📥 Télécharger</button></div></div>
+    <div id="assignModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>📨 Assigner</h3><span class="close-modal" onclick="closeAssignModal()">&times;</span></div><div id="assignCourrierInfo"></div><select id="assignToUser" class="form-control"></select><textarea id="assignComment" class="form-control" rows="2" placeholder="Commentaire..."></textarea><button class="btn-add" onclick="confirmAssign()">✓ Assigner</button></div></div>
+    <div id="traiterModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>✅ Traitement</h3><span class="close-modal" onclick="closeTraiterModal()">&times;</span></div><div id="traiterCourrierInfo"></div><textarea id="traiterComment" class="form-control" rows="3" placeholder="Rapport..."></textarea><button class="btn-add" onclick="confirmTraiter()">✅ Traiter</button></div></div>
+    <div id="editCourrierModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>✏️ Modifier le courrier</h3><span class="close-modal" onclick="closeEditModal()">&times;</span></div><div id="editCourrierInfo"></div><div class="form-group"><label class="form-label">Objet</label><input type="text" id="editObjet" class="form-control"></div><div class="form-group"><label class="form-label">Statut</label><select id="editStatut" class="form-control"><option value="en_attente">En attente</option><option value="traite">Traité</option><option value="urgent">Urgent</option><option value="archive">Archivé</option></select></div><div class="form-group"><label class="form-label">Priorité</label><select id="editPriorite" class="form-control"><option value="low">Basse</option><option value="medium">Moyenne</option><option value="high">Haute</option></select></div><div class="form-group"><label class="form-label">Contenu</label><textarea id="editContenu" class="form-control" rows="3"></textarea></div><div style="display: flex; gap: 10px;"><button class="btn-add" onclick="saveEditCourrier()" style="flex:1;">💾 Enregistrer</button><button class="btn-add" onclick="closeEditModal()" style="flex:1; background:#6c757d;">Annuler</button></div></div></div>
+    <div id="multipleTraiterModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>✅ Traitement multiple</h3><span class="close-modal" onclick="closeMultipleTraiterModal()">&times;</span></div><div id="selectedTraiterList"></div><textarea id="traiterMultipleComment" class="form-control" rows="3" placeholder="Rapport..."></textarea><button class="btn-add" onclick="confirmMultipleTraiter()">✅ Confirmer</button></div></div>
+    <div id="notificationsModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>🔔 Notifications</h3><span class="close-modal" onclick="closeNotificationsModal()">&times;</span></div><div id="notificationsList"></div></div></div>
+    <div id="deleteConfirmModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>🗑️ Confirmer la suppression</h3><span class="close-modal" onclick="closeDeleteConfirmModal()">&times;</span></div><p>Êtes-vous sûr de vouloir supprimer ce courrier ? Cette action est irréversible.</p><div><button class="btn-add btn-danger" onclick="confirmDeleteCourrier()">Supprimer</button><button class="btn-add" onclick="closeDeleteConfirmModal()">Annuler</button></div></div></div>
+    <div id="archiveConfirmModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>📦 Confirmer l'archivage</h3><span class="close-modal" onclick="closeArchiveConfirmModal()">&times;</span></div><p>Êtes-vous sûr de vouloir archiver ce courrier ?</p><div><button class="btn-add" style="background:#06b6d4;" onclick="confirmArchiveCourrier()">📦 Archiver</button><button class="btn-add" onclick="closeArchiveConfirmModal()">Annuler</button></div></div></div>
+
+    <script>
+        // ==================== VARIABLES ====================
+        let currentPage = 1, totalPages = 1;
+        let currentPageTraitement = 1, totalPagesTraitement = 1;
+        let traitementCourriersFiltres = [], selectedTraitementIds = [];
+        let charts = {}, userRole = '', userNiveau = 0, userPermissions = {};
+        let allCourriers = [], pendingCourriers = [], servicesUsers = {};
+        let currentAssignCourrier = null, currentTraiterAssignation = null;
+        let currentScanFile = null, currentAnalysis = null;
+        let currentPdfUrl = '';
+        let courrierToDelete = null;
+        let courrierToArchive = null;
+        let courrierToEdit = null;
+
+        // ==================== GESTION DES PERMISSIONS UI ====================
+        function updateUIByPermissions(niveau, role) {
+            userNiveau = niveau;
+            userRole = role;
+            const canScan = niveau >= 3;
+            const canExport = niveau >= 5;
+            const canAssign = niveau >= 8;
+            const canAudit = niveau >= 10;
+            
+            document.querySelectorAll('.assignation-only, .traitement-only, .stats-only, .analytics-only').forEach(el => {
+                if (canAssign) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            document.querySelectorAll('.audit-only').forEach(el => {
+                if (canAudit) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            document.querySelectorAll('.export-only').forEach(el => {
+                if (canExport) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            document.querySelectorAll('.scan-only').forEach(el => {
+                if (canScan) el.classList.remove('hidden');
+                else el.classList.add('hidden');
+            });
+            
+            const roleMap = {1: 'Stagiaire', 3: 'Assistant', 5: 'Chargé d\'étude', 8: 'Chef de service', 10: 'Directeur'};
+            document.getElementById('userRole').textContent = roleMap[niveau] || role;
+        }
+
+        // ==================== CHARGEMENT DES PERMISSIONS ====================
+        async function loadUserPermissions() {
+            try {
+                const res = await fetch('/api/user/permissions', { credentials: 'include' });
+                const data = await res.json();
+                if (data.success) {
+                    userPermissions = data.permissions;
+                    userRole = data.role;
+                    userNiveau = data.niveau;
+                    updateUIByPermissions(userNiveau, userRole);
+                    return true;
+                }
+                return false;
+            } catch(e) { return false; }
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+        if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+
+        const uploadArea = document.getElementById('uploadArea');
+        if(uploadArea) {
+            uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+            uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('drag-over'); });
+            uploadArea.addEventListener('drop', (e) => { e.preventDefault(); uploadArea.classList.remove('drag-over'); const file = e.dataTransfer.files[0]; if(file) handleFileUpload(file); });
+            uploadArea.addEventListener('click', () => document.getElementById('fileInput').click());
+        }
+
+        async function checkAuth() {
+            try { const res = await fetch('/api/check_auth', { credentials: 'include' }); const data = await res.json();
+            if (!data.success) { window.location.href = '/'; return false; } return data;
+            } catch(e) { window.location.href = '/'; return false; }
+        }
+
+        async function loadAllData() {
+            const auth = await checkAuth();
+            if (!auth) return;
+            await loadUserPermissions();
+            if (auth.user) {
+                document.getElementById('username').textContent = auth.user.nom_complet || auth.user.username;
+                document.getElementById('userName').textContent = auth.user.nom_complet || auth.user.username;
+                document.getElementById('userAvatar').textContent = (auth.user.nom_complet || auth.user.username).charAt(0).toUpperCase();
+            }
+            await loadCourriers();
+            await loadStats();
+            await loadAdvancedAnalytics();
+            await loadAuditLogs();
+            await loadTraitementCourriers();
+            initCharts();
+            setupTabs();
+            if (userNiveau >= 8) await loadPendingCourriers();
+            loadNotifications();
+            setInterval(() => loadNotifications(), 30000);
+            
+            // Charger les graphiques matplotlib si l'onglet statistiques est visible
+            setTimeout(loadMatplotlibCharts, 1000);
+        }
+
+        // ==================== COURRIERS ====================
+        function clearFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('dateStartFilter').value = '';
+            document.getElementById('dateEndFilter').value = '';
+            document.getElementById('statusFilter').value = 'all';
+            document.getElementById('priorityFilter').value = 'all';
+            loadCourriers();
+        }
+
+        async function loadCourriers() {
+            const search = document.getElementById('searchInput')?.value || '';
+            const status = document.getElementById('statusFilter')?.value || 'all';
+            const priority = document.getElementById('priorityFilter')?.value || 'all';
+            const dateStart = document.getElementById('dateStartFilter')?.value || '';
+            const dateEnd = document.getElementById('dateEndFilter')?.value || '';
+            
+            let url = `/api/courriers?page=${currentPage}&per_page=10`;
+            if(search) url += `&search=${encodeURIComponent(search)}`;
+            if(status !== 'all') url += `&status=${status}`;
+            if(priority !== 'all') url += `&priority=${priority}`;
+            if(dateStart) url += `&date_start=${dateStart}`;
+            if(dateEnd) url += `&date_end=${dateEnd}`;
+            
+            try {
+                const res = await fetch(url, { credentials: 'include' });
+                const data = await res.json();
+                if(data.success) {
+                    allCourriers = data.courriers || [];
+                    displayCourriersTable(allCourriers);
+                    displayRecentCourriers(allCourriers.slice(0, 5).reverse());
+                    updateStatsCards(allCourriers);
+                    updateCharts(allCourriers);
+                    totalPages = data.pages || 1;
+                    document.getElementById('pageInfo').innerHTML = `Page ${currentPage} / ${totalPages}`;
+                    document.getElementById('prevBtn').disabled = currentPage <= 1;
+                    document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+                    document.getElementById('courrierBadge').textContent = allCourriers.filter(c => c.statut === 'en_attente').length;
+                    document.getElementById('traitementBadge').innerHTML = allCourriers.filter(c => c.statut === 'en_attente' || c.statut === 'urgent').length;
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function displayCourriersTable(courriers) {
+            const tbody = document.getElementById('courriersTableBody');
+            if(!courriers.length) { tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:40px;">📭 Aucun courrier</td></tr>'; return; }
+            
+            const canEdit = userNiveau >= 5;
+            const canDelete = userNiveau >= 8;
+            
+            tbody.innerHTML = courriers.map(c => {
+                const hasScan = c.scan_image_path && c.scan_image_path !== null && c.scan_image_path !== '';
+                const canArchive = c.statut !== 'archive';
+                return `<tr style="${c.priorite === 'high' ? 'border-left: 3px solid #ef4444;' : ''}">
+                    <td>${c.id}</td>
+                    <td>${c.date_reception || '-'}</td>
+                    <td><strong>${escapeHtml(c.expediteur)}</strong></td>
+                    <td>${escapeHtml(c.objet?.substring(0, 50))}</td>
+                    <td>${getClassificationBadge(c.ai_classification || c.classification_ia || 'normal')}</td>
+                    <td>${getPriorityBadge(c.priorite)}</td><td>${getStatusBadge(c.statut)}</td>
+                    <td>${c.ocr_confidence ? `🎯 ${c.ocr_confidence}%` : '-'}</td>
+                    <td>
+                        <button class="action-btn btn-view" onclick="viewCourrier(${c.id})">👁️</button>
+                        ${hasScan ? `<button class="action-btn btn-pdf" onclick="previewScanByCourrierId(${c.id})">📄</button>` : ''}
+                        ${canEdit ? `<button class="action-btn btn-edit" onclick="openEditModal(${c.id})">✏️</button>` : ''}
+                        ${canArchive && canDelete ? `<button class="action-btn btn-archive" onclick="openArchiveModal(${c.id})" title="Archiver">📦</button>` : ''}
+                        ${canDelete ? `<button class="action-btn btn-delete" onclick="openDeleteModal(${c.id})">🗑️</button>` : ''}
+                     </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function displayRecentCourriers(courriers) {
+            const tbody = document.getElementById('recentCourriers');
+            if(!tbody) return;
+            if(!courriers.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:40px;">📭 Aucun courrier récent</td></tr>'; return; }
+            
+            tbody.innerHTML = courriers.map(c => {
+                const hasScan = c.scan_image_path && c.scan_image_path !== null && c.scan_image_path !== '';
+                const canEdit = userNiveau >= 5;
+                return `<tr>
+                    <td>${c.date_reception || '-'}</td>
+                    <td><strong>${escapeHtml(c.expediteur)}</strong></td>
+                    <td>${escapeHtml(c.objet?.substring(0, 40))}</td>
+                    <td>${getClassificationBadge(c.ai_classification || 'normal')}</td>
+                    <td>${getStatusBadge(c.statut)}</td>
+                    <td>${getPriorityBadge(c.priorite)}</td>
+                    <td>${c.ocr_confidence ? `${c.ocr_confidence}%` : '-'}</td>
+                    <td>
+                        <button class="action-btn btn-view" onclick="viewCourrier(${c.id})">👁️</button>
+                        ${hasScan ? `<button class="action-btn btn-pdf" onclick="previewScanByCourrierId(${c.id})">📄</button>` : ''}
+                        ${canEdit ? `<button class="action-btn btn-edit" onclick="openEditModal(${c.id})">✏️</button>` : ''}
+                     </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function updateStatsCards(courriers) {
+            const total = courriers.length, enAttente = courriers.filter(c => c.statut === 'en_attente').length;
+            const traites = courriers.filter(c => c.statut === 'traite').length, urgents = courriers.filter(c => c.statut === 'urgent' || c.priorite === 'high').length;
+            document.getElementById('statsGrid').innerHTML = `<div class="stat-card"><div class="stat-header"><span class="stat-title">📬 Total courriers</span><span class="stat-icon">📊</span></div><div class="stat-value">${total}</div></div>
+                <div class="stat-card"><div class="stat-header"><span class="stat-title">⏳ En attente</span><span class="stat-icon">⏰</span></div><div class="stat-value">${enAttente}</div></div>
+                <div class="stat-card"><div class="stat-header"><span class="stat-title">✅ Traités</span><span class="stat-icon">✓</span></div><div class="stat-value">${traites}</div></div>
+                <div class="stat-card"><div class="stat-header"><span class="stat-title">🚨 Urgents</span><span class="stat-icon">⚠️</span></div><div class="stat-value">${urgents}</div></div>`;
+        }
+
+        function getClassificationBadge(c) {
+            const badges = { urgent:'badge-urgent', juridique:'badge-juridique', financier:'badge-financier', normal:'badge-normal' };
+            const icons = { urgent:'🚨', juridique:'⚖️', financier:'💰', normal:'📋' };
+            return `<span class="badge ${badges[c] || 'badge-normal'}">${icons[c] || '📋'} ${c || 'Normal'}</span>`;
+        }
+
+        function getPriorityBadge(p) { 
+            if(p==='high') return '<span class="priority-high">🔴 Haute</span>';
+            if(p==='medium') return '<span class="priority-medium">🟡 Moyenne</span>';
+            return '<span class="priority-low">🟢 Basse</span>';
+        }
+        
+        function getStatusBadge(s) { 
+            const b = { en_attente:'badge-en_attente', traite:'badge-traite', urgent:'badge-urgent', archive:'badge-archive' };
+            const i = { en_attente:'⏳', traite:'✅', urgent:'🚨', archive:'📦' };
+            return `<span class="badge ${b[s]||'badge-en_attente'}">${i[s]||'📋'} ${s?.replace('_',' ')||'En attente'}</span>`;
+        }
+
+        // ==================== MODIFICATION ====================
+        function openEditModal(courrierId) {
+            if (userNiveau < 5) { showNotification('Permission insuffisante pour modifier', 'error'); return; }
+            const courrier = allCourriers.find(c => c.id === courrierId);
+            if (!courrier) return;
+            courrierToEdit = courrierId;
+            document.getElementById('editObjet').value = courrier.objet || '';
+            document.getElementById('editStatut').value = courrier.statut || 'en_attente';
+            document.getElementById('editPriorite').value = courrier.priorite || 'medium';
+            document.getElementById('editContenu').value = courrier.contenu || '';
+            document.getElementById('editCourrierModal').classList.add('active');
+        }
+
+        async function saveEditCourrier() {
+            if (!courrierToEdit) return;
+            const data = {
+                objet: document.getElementById('editObjet').value,
+                statut: document.getElementById('editStatut').value,
+                priorite: document.getElementById('editPriorite').value,
+                contenu: document.getElementById('editContenu').value
+            };
+            try {
+                const res = await fetch(`/api/courriers/${courrierToEdit}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showNotification('Courrier modifié avec succès', 'success');
+                    closeEditModal();
+                    await loadCourriers();
+                    await loadTraitementCourriers();
+                    await loadStats();
+                } else {
+                    showNotification(result.message || 'Erreur lors de la modification', 'error');
+                }
+            } catch(e) {
+                showNotification('Erreur lors de la modification', 'error');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('editCourrierModal').classList.remove('active');
+            courrierToEdit = null;
+        }
+
+        // ==================== ARCHIVAGE ====================
+        function openArchiveModal(courrierId) {
+            if (userNiveau < 8) { showNotification('Permission insuffisante pour archiver', 'error'); return; }
+            courrierToArchive = courrierId;
+            document.getElementById('archiveConfirmModal').classList.add('active');
+        }
+
+        function closeArchiveConfirmModal() {
+            document.getElementById('archiveConfirmModal').classList.remove('active');
+            courrierToArchive = null;
+        }
+
+        async function confirmArchiveCourrier() {
+            if (!courrierToArchive) return;
+            try {
+                const res = await fetch(`/api/courriers/${courrierToArchive}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ statut: 'archive' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showNotification('Courrier archivé avec succès', 'success');
+                    closeArchiveConfirmModal();
+                    await loadCourriers();
+                    await loadTraitementCourriers();
+                    await loadStats();
+                } else {
+                    showNotification(data.message || 'Erreur lors de l\'archivage', 'error');
+                }
+            } catch(e) {
+                showNotification('Erreur lors de l\'archivage', 'error');
+            }
+        }
+
+        // ==================== SUPPRESSION ====================
+        function openDeleteModal(courrierId) {
+            if (userNiveau < 8) { showNotification('Permission insuffisante', 'error'); return; }
+            courrierToDelete = courrierId;
+            document.getElementById('deleteConfirmModal').classList.add('active');
+        }
+
+        function closeDeleteConfirmModal() { document.getElementById('deleteConfirmModal').classList.remove('active'); courrierToDelete = null; }
+
+        async function confirmDeleteCourrier() {
+            if (!courrierToDelete) return;
+            try {
+                const res = await fetch(`/api/courriers/${courrierToDelete}`, { method: 'DELETE', credentials: 'include' });
+                const data = await res.json();
+                if (data.success) {
+                    showNotification('Courrier supprimé avec succès', 'success');
+                    closeDeleteConfirmModal();
+                    await loadCourriers();
+                    await loadTraitementCourriers();
+                    await loadStats();
+                } else showNotification(data.message || 'Erreur', 'error');
+            } catch(e) { showNotification('Erreur lors de la suppression', 'error'); }
+        }
+
+        // ==================== CHARTES ====================
+        function initCharts() {
+            const ctxStatus = document.getElementById('statusChart')?.getContext('2d');
+            const ctxPriority = document.getElementById('priorityChart')?.getContext('2d');
+            const ctxMonthly = document.getElementById('monthlyChart')?.getContext('2d');
+            const ctxTop = document.getElementById('topExpediteursChart')?.getContext('2d');
+            const ctxHourly = document.getElementById('hourlyChart')?.getContext('2d');
+            const ctxML = document.getElementById('mlPredictionChart')?.getContext('2d');
+            const ctxClassif = document.getElementById('classificationChart')?.getContext('2d');
+            const ctxPerf = document.getElementById('performanceChart')?.getContext('2d');
+            if(ctxStatus) charts.statusChart = new Chart(ctxStatus, { type:'doughnut', data:{ labels:['En attente','Traité','Urgent','Archivé'], datasets:[{ data:[0,0,0,0], backgroundColor:['#f59e0b','#10b981','#ef4444','#06b6d4'] }] } });
+            if(ctxPriority) charts.priorityChart = new Chart(ctxPriority, { type:'pie', data:{ labels:['Haute','Moyenne','Basse'], datasets:[{ data:[0,0,0], backgroundColor:['#ef4444','#f59e0b','#10b981'] }] } });
+            if(ctxMonthly) charts.monthlyChart = new Chart(ctxMonthly, { type:'line', data:{ labels:[], datasets:[{ label:'Courriers', data:[], borderColor:'#7c3aed' }] } });
+            if(ctxTop) charts.topExpediteursChart = new Chart(ctxTop, { type:'bar', data:{ labels:[], datasets:[{ data:[], backgroundColor:'#a855f7' }] } });
+            if(ctxHourly) charts.hourlyChart = new Chart(ctxHourly, { type:'bar', data:{ labels:Array.from({length:24},(_,i)=>`${i}h`), datasets:[{ label:'Courriers', data:Array(24).fill(0), backgroundColor:'#7c3aed' }] } });
+            if(ctxML) charts.mlChart = new Chart(ctxML, { type:'line', data:{ labels:[], datasets:[{ label:'Prédiction', data:[], borderColor:'#dc3545' }] } });
+            if(ctxClassif) charts.classificationChart = new Chart(ctxClassif, { type:'doughnut', data:{ labels:['Urgent','Juridique','Financier','Normal'], datasets:[{ data:[0,0,0,0], backgroundColor:['#ef4444','#06b6d4','#10b981','#6c757d'] }] } });
+            if(ctxPerf) charts.performanceChart = new Chart(ctxPerf, { type:'line', data:{ labels:['Jan','Fev','Mar','Avr','Mai','Juin'], datasets:[{ label:'Performance (%)', data:[0,0,0,0,0,0], borderColor:'#10b981' }] } });
+        }
+
+        function updateCharts(courriers) {
+            const enAttente = courriers.filter(c => c.statut === 'en_attente').length, traites = courriers.filter(c => c.statut === 'traite').length;
+            const urgents = courriers.filter(c => c.statut === 'urgent').length, archives = courriers.filter(c => c.statut === 'archive').length;
+            const high = courriers.filter(c => c.priorite === 'high').length, medium = courriers.filter(c => c.priorite === 'medium').length, low = courriers.filter(c => c.priorite === 'low').length;
+            const classif = { urgent:0, juridique:0, financier:0, normal:0 };
+            courriers.forEach(c => { const cl = c.ai_classification || c.classification_ia || 'normal'; if(classif[cl] !== undefined) classif[cl]++; else classif.normal++; });
+            if(charts.statusChart) { charts.statusChart.data.datasets[0].data = [enAttente, traites, urgents, archives]; charts.statusChart.update(); }
+            if(charts.priorityChart) { charts.priorityChart.data.datasets[0].data = [high, medium, low]; charts.priorityChart.update(); }
+            if(charts.classificationChart) { charts.classificationChart.data.datasets[0].data = [classif.urgent, classif.juridique, classif.financier, classif.normal]; charts.classificationChart.update(); }
+        }
+
+        async function loadStats() {
+            if (userNiveau < 8) return;
+            try { const res = await fetch('/api/stats/global', { credentials: 'include' }); const data = await res.json();
+            if(data.success && data.evolution && charts.monthlyChart) { charts.monthlyChart.data.labels = data.evolution.map(e => e.mois); charts.monthlyChart.data.datasets[0].data = data.evolution.map(e => e.total); charts.monthlyChart.update(); }
+            } catch(e) { console.error(e); } }
+
+        async function loadAdvancedAnalytics() {
+            if (userNiveau < 8) return;
+            try { const res = await fetch('/api/analytics/advanced', { credentials: 'include' }); const data = await res.json();
+            if(data.success && data.hourly_distribution && charts.hourlyChart) { const hours = Array(24).fill(0); data.hourly_distribution.forEach(h => { if(h.heure>=0 && h.heure<24) hours[h.heure] = h.total; }); charts.hourlyChart.data.datasets[0].data = hours; charts.hourlyChart.update(); }
+            await loadMLPredictions();
+            } catch(e) { console.error(e); } }
+
+        async function loadMLPredictions() {
+            if (userNiveau < 8) return;
+            try { const res = await fetch('/api/ml/predictions', { credentials: 'include' }); const data = await res.json();
+            if(data.success && charts.mlChart) { charts.mlChart.data.labels = data.jours_labels; charts.mlChart.data.datasets[0].data = data.predictions_30j; charts.mlChart.update(); 
+            document.getElementById('mlSuggestionsList').innerHTML = (data.suggestions || []).map(s => `<div class="ai-summary">💡 ${s}</div>`).join(''); } } catch(e) { console.error(e); } }
+
+        // ==================== AUDIT TRAIL ====================
+        async function loadAuditLogs() {
+            if (userNiveau < 10) return;
+            try { 
+                const res = await fetch('/api/audit/logs', { credentials: 'include' });
+                const data = await res.json();
+                if(data.success && data.logs) { 
+                    document.getElementById('auditTimeline').innerHTML = data.logs.slice(0,30).map(log => `<div class="timeline-item">
+                        <div class="timeline-date">${new Date(log.created_at).toLocaleString()}</div>
+                        <div class="timeline-content">
+                            <span class="timeline-user">${escapeHtml(log.username)}</span> 
+                            a effectué <strong>${log.action}</strong><br>
+                            <small>${escapeHtml(log.details || '-')}</small>
+                        </div>
+                    </div>`).join(''); 
+                    if(data.logs.length === 0) {
+                        document.getElementById('auditTimeline').innerHTML = '<p style="text-align:center; padding:40px;">📭 Aucun log d\'audit</p>';
+                    }
+                }
+            } catch(e) { 
+                console.error(e);
+                document.getElementById('auditTimeline').innerHTML = '<p style="text-align:center; padding:40px; color:red;">❌ Erreur chargement des logs</p>';
+            }
+        }
+        
+        function refreshAuditLogs() { 
+            showNotification('Rafraîchissement des logs...', 'info');
+            loadAuditLogs(); 
+        }
+
+        // ==================== TRAITEMENT ====================
+        async function loadTraitementCourriers() {
+            if (userNiveau < 8) return;
+            try {
+                let url = `/api/courriers?page=${currentPageTraitement}&per_page=10`;
+                const search = document.getElementById('traitementSearchInput')?.value || '';
+                const status = document.getElementById('traitementStatusFilter')?.value || 'all';
+                const priority = document.getElementById('traitementPriorityFilter')?.value || 'all';
+                const classification = document.getElementById('traitementClassificationFilter')?.value || 'all';
+                
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                if (status !== 'all') url += `&status=${status}`;
+                if (priority !== 'all') url += `&priority=${priority}`;
+                if (classification !== 'all') url += `&classification=${classification}`;
+                
+                const res = await fetch(url, { credentials: 'include' });
+                const data = await res.json();
+                if (data.success) {
+                    traitementCourriersFiltres = data.courriers || [];
+                    displayTraitementCourriers(traitementCourriersFiltres);
+                    totalPagesTraitement = data.pages || 1;
+                    document.getElementById('pageInfoTraitement').innerHTML = `Page ${currentPageTraitement} / ${totalPagesTraitement}`;
+                    const prevBtn = document.getElementById('prevBtnTraitement');
+                    const nextBtn = document.getElementById('nextBtnTraitement');
+                    if (prevBtn) prevBtn.disabled = currentPageTraitement <= 1;
+                    if (nextBtn) nextBtn.disabled = currentPageTraitement >= totalPagesTraitement;
+                    updateTraitementStats(data.courriers || []);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function displayTraitementCourriers(courriers) {
+            const tbody = document.getElementById('traitementCourriersTable');
+            if (!courriers.length) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">📭 Aucun courrier à traiter</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = courriers.map(c => {
+                const delai = calculerDelai(c.date_reception);
+                const delaiClass = delai > 7 ? 'text-danger' : (delai > 3 ? 'text-warning' : 'text-success');
+                const hasScan = c.scan_image_path && c.scan_image_path !== null && c.scan_image_path !== '';
+                return `<tr style="${c.priorite === 'high' ? 'border-left: 3px solid #ef4444;' : ''}">
+                    <td class="checkbox-col"><input type="checkbox" class="traitement-checkbox" value="${c.id}" ${c.statut === 'traite' ? 'disabled' : ''} onchange="updateTraitementSelectedCount()"></td>
+                    <td><strong>#${c.id}</strong></td>
+                    <td>${formatDate(c.date_reception)}</td>
+                    <td><strong>${escapeHtml(c.expediteur)}</strong></td>
+                    <td>${escapeHtml(c.objet?.substring(0, 40))}</td>
+                    <td>${getClassificationBadge(c.ai_classification || c.classification_ia || 'normal')}</td>
+                    <td>${getPriorityBadge(c.priorite)}</td>
+                    <td>${getStatusBadge(c.statut)}</td>
+                    <td class="${delaiClass}">${delai > 0 ? `${delai} jour(s)` : 'Aujourd\'hui'} ${delai > 7 ? ' ⚠️' : ''}</td>
+                    <td>
+                        <button class="action-btn btn-view" onclick="viewCourrierDetail(${c.id})">👁️</button>
+                        ${hasScan ? `<button class="action-btn btn-pdf" onclick="previewScanByCourrierId(${c.id})">📄</button>` : ''}
+                        <button class="action-btn btn-edit" onclick="quickTraiterCourrier(${c.id})" style="color:#10b981;">✅</button>
+                     </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function previewScanByCourrierId(courrierId) {
+            if (!courrierId) { showNotification('ID de courrier invalide', 'error'); return; }
+            showNotification('Chargement du document...', 'info');
+            const url = `/api/scan/view/${courrierId}`;
+            currentPdfUrl = url;
+            fetch(url, { method: 'HEAD', credentials: 'include' })
+                .then(response => {
+                    if (response.ok) { document.getElementById('pdfPreviewIframe').src = url; document.getElementById('pdfPreviewModal').classList.add('active'); }
+                    else if (response.status === 404) showNotification('Document non trouvé', 'error');
+                    else showNotification('Erreur lors du chargement', 'error');
+                })
+                .catch(() => showNotification('Impossible de charger le document', 'error'));
+        }
+
+        function calculerDelai(dateReception) {
+            if (!dateReception) return 0;
+            const reception = new Date(dateReception);
+            const aujourdhui = new Date();
+            const diffTime = Math.abs(aujourdhui - reception);
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR');
+        }
+
+        function updateTraitementStats(courriers) {
+            const aTraiter = courriers.filter(c => c.statut === 'en_attente' || c.statut === 'urgent').length;
+            const urgents = courriers.filter(c => c.priorite === 'high').length;
+            const aujourdhui = new Date().toISOString().split('T')[0];
+            const traitesAujourdhui = courriers.filter(c => c.statut === 'traite' && c.date_traitement === aujourdhui).length;
+            let totalDelai = 0, count = 0;
+            courriers.forEach(c => { if (c.statut !== 'traite' && c.date_reception) { totalDelai += calculerDelai(c.date_reception); count++; } });
+            const delaiMoyen = count > 0 ? (totalDelai / count).toFixed(1) : 0;
+            document.getElementById('totalATraiter').textContent = aTraiter;
+            document.getElementById('urgentsCount').textContent = urgents;
+            document.getElementById('traitesAujourdhui').textContent = traitesAujourdhui;
+            document.getElementById('delaiMoyen').textContent = delaiMoyen;
+        }
+
+        function updateTraitementSelectedCount() {
+            const checkboxes = document.querySelectorAll('.traitement-checkbox:checked:not([disabled])');
+            selectedTraitementIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            document.getElementById('traitementSelectedInfo').innerHTML = `✅ ${selectedTraitementIds.length} sélectionné(s)`;
+            document.getElementById('btnTraiterSelection').disabled = selectedTraitementIds.length === 0;
+            const selectAll = document.getElementById('selectAllTraitementCheckbox');
+            if (selectAll) {
+                const allCheckboxes = document.querySelectorAll('.traitement-checkbox:not([disabled])');
+                selectAll.checked = checkboxes.length === allCheckboxes.length && allCheckboxes.length > 0;
+            }
+        }
+
+        function toggleSelectAllTraitement() {
+            const allCheckboxes = document.querySelectorAll('.traitement-checkbox:not([disabled])');
+            const someChecked = Array.from(allCheckboxes).some(cb => cb.checked);
+            allCheckboxes.forEach(cb => cb.checked = !someChecked);
+            updateTraitementSelectedCount();
+        }
+
+        function toggleSelectAllFromCheckboxTraitement() {
+            document.querySelectorAll('.traitement-checkbox:not([disabled])').forEach(cb => cb.checked = document.getElementById('selectAllTraitementCheckbox').checked);
+            updateTraitementSelectedCount();
+        }
+
+        function filterTraitementCourriers() { currentPageTraitement = 1; loadTraitementCourriers(); }
+        function clearTraitementFilters() {
+            document.getElementById('traitementSearchInput').value = '';
+            document.getElementById('traitementStatusFilter').value = 'all';
+            document.getElementById('traitementPriorityFilter').value = 'all';
+            document.getElementById('traitementClassificationFilter').value = 'all';
+            filterTraitementCourriers();
+        }
+
+        function openMultipleTraiterModal() {
+            if (!selectedTraitementIds.length) { showNotification('Sélectionnez des courriers', 'error'); return; }
+            document.getElementById('multipleTraiterModal').classList.add('active');
+        }
+
+        async function confirmMultipleTraiter() {
+            const comment = document.getElementById('traiterMultipleComment').value;
+            if (!comment) { showNotification('Ajoutez un rapport', 'error'); return; }
+            let s=0,e=0;
+            for(const id of selectedTraitementIds) {
+                try{ const res=await fetch(`/api/courriers/${id}`,{method:'PUT',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({statut:'traite',commentaire_traitement:comment,date_traitement:new Date().toISOString().split('T')[0]})}); if((await res.json()).success) s++; else e++; } catch(err){ e++; }
+            }
+            showNotification(`✅ ${s} traités, ❌ ${e} erreurs`, s>0?'success':'error');
+            closeMultipleTraiterModal();
+            document.getElementById('traiterMultipleComment').value = '';
+            selectedTraitementIds = [];
+            await loadTraitementCourriers();
+            await loadCourriers();
+            await loadStats();
+        }
+
+        function previousPageTraitement() { if(currentPageTraitement > 1) { currentPageTraitement--; loadTraitementCourriers(); } }
+        function nextPageTraitement() { if(currentPageTraitement < totalPagesTraitement) { currentPageTraitement++; loadTraitementCourriers(); } }
+
+        // ==================== ASSIGNATION ====================
+        async function loadPendingCourriers() {
+            if (userNiveau < 8) return;
+            try { 
+                const res = await fetch('/api/assignations/courriers-pendings', { credentials: 'include' }); 
+                const data = await res.json();
+                if(data.success) { 
+                    pendingCourriers = data.courriers; 
+                    servicesUsers = data.services_users; 
+                    displayPendingCourriers(pendingCourriers); 
+                } 
+            } catch(e) { console.error(e); } 
+        }
+        
+        function displayPendingCourriers(courriers) { 
+            const tbody = document.getElementById('pendingCourriersTable');
+            if(!courriers.length) { 
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">📭 Aucun courrier en attente d\'assignation</td></tr>'; 
+                return; 
+            }
+            tbody.innerHTML = courriers.map(c => `
+                <tr>
+                    <td>${c.id}</td>
+                    <td>${c.date_reception || '-'}</td>
+                    <td><strong>${escapeHtml(c.expediteur)}</strong></td>
+                    <td>${escapeHtml(c.objet?.substring(0,40))}</td>
+                    <td>${getClassificationBadge(c.ai_classification || 'normal')}</td>
+                    <td>${getPriorityBadge(c.priorite)}</td>
+                    <td><button class="btn-add" onclick="openAssignModal(${c.id})" style="padding:5px 10px;">📨 Assigner</button></td>
+                </tr>`).join('');
+        }
+
+        function openAssignModal(courrierId) { 
+            const c = pendingCourriers.find(c => c.id === courrierId); 
+            if(!c) return; 
+            currentAssignCourrier = c; 
+            document.getElementById('assignCourrierInfo').innerHTML = `<div><strong>Courrier #${c.id}</strong><br>${escapeHtml(c.objet)}<br>${escapeHtml(c.expediteur)}</div>`; 
+            const select = document.getElementById('assignToUser'); 
+            select.innerHTML = '<option value="">-- Choisir --</option>'; 
+            for(const [service, users] of Object.entries(servicesUsers)) { 
+                users.forEach(u => { 
+                    const opt = document.createElement('option'); 
+                    opt.value = u.id; 
+                    opt.textContent = `${u.nom_complet} (${u.role})`; 
+                    select.appendChild(opt); 
+                }); 
+            } 
+            document.getElementById('assignModal').classList.add('active'); 
+        }
+        
+        async function confirmAssign() { 
+            const userId = document.getElementById('assignToUser').value; 
+            if(!userId) { 
+                showNotification('Choisissez un utilisateur','error'); 
+                return; 
+            } 
+            try { 
+                const res = await fetch('/api/assignations/assign',{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    credentials:'include',
+                    body:JSON.stringify({
+                        courrier_id:currentAssignCourrier.id,
+                        assigned_to_user_id:userId,
+                        commentaire:document.getElementById('assignComment').value
+                    })
+                }); 
+                const data=await res.json(); 
+                if(data.success){
+                    showNotification(data.message,'success');
+                    closeAssignModal();
+                    await loadPendingCourriers();
+                    await loadCourriers();
+                } else showNotification(data.message,'error'); 
+            } catch(e){showNotification('Erreur','error');} 
+        }
+
+        // ==================== SCAN ====================
+        function openScanModal() { if (userNiveau < 3) { showNotification('Permission insuffisante pour scanner', 'error'); return; } document.getElementById('scanModal').classList.add('active'); resetScanModal(); }
+        function closeScanModal() { document.getElementById('scanModal').classList.remove('active'); resetScanModal(); }
+        function resetScanModal() { document.getElementById('previewContainer').style.display='none'; document.getElementById('scanProgress').style.display='none'; document.getElementById('scanResult').style.display='none'; document.getElementById('fileInput').value=''; currentScanFile=null; currentAnalysis=null; }
+        function handleFileUpload(file) { if(!file) return; currentScanFile=file; const reader=new FileReader(); reader.onload=e=>{document.getElementById('previewImage').src=e.target.result;document.getElementById('previewContainer').style.display='block';}; reader.readAsDataURL(file); analyzeDocument(file); }
+        async function analyzeDocument(file) { const fd=new FormData(); fd.append('document',file); document.getElementById('scanProgress').style.display='block'; let progress=0; const interval=setInterval(()=>{progress+=10;document.getElementById('scanProgressFill').style.width=progress+'%';if(progress>=100)clearInterval(interval);},150); try{ const res=await fetch('/api/scan/analyze',{method:'POST',credentials:'include',body:fd}); const data=await res.json(); if(data.success){ currentAnalysis=data; document.getElementById('extractedText').innerHTML=data.extracted_text; document.getElementById('ocrConfidence').innerHTML=`🎯 Confiance OCR: ${data.confidence}%`; document.getElementById('aiClassification').innerHTML=`🤖 Classification IA: ${data.ai_classification || 'Normal'}`; document.getElementById('aiSummary').innerHTML=`📝 Résumé: ${data.ai_summary || 'Courrier officiel'}`; document.getElementById('scanResult').style.display='block'; } else showNotification(data.message,'error'); } catch(e){showNotification('Erreur analyse','error');} finally{clearInterval(interval);document.getElementById('scanProgress').style.display='none';} }
+        async function saveScannedCourrier() { if(!currentScanFile||!currentAnalysis){showNotification('Aucun document analysé','error');return;} const fd=new FormData(); fd.append('scan_image',currentScanFile); fd.append('courrier_data',JSON.stringify({date_reception:new Date().toISOString().split('T')[0],expediteur:currentAnalysis.suggested_expediteur||'Document scanné',objet:currentAnalysis.suggested_objet||'Courrier scanné',contenu:currentAnalysis.extracted_text,priorite:currentAnalysis.suggested_priorite||'medium',ai_classification:currentAnalysis.ai_classification||'normal',ocr_confidence:currentAnalysis.confidence||0,ai_summary:currentAnalysis.ai_summary||''})); const res=await fetch('/api/scan/save',{method:'POST',credentials:'include',body:fd}); const data=await res.json(); if(data.success){showNotification('Courrier enregistré !','success');closeScanModal();loadCourriers();loadStats();} else showNotification(data.message,'error'); }
+
+        // ==================== PDF & EXPORT ====================
+        function previewPdf(url) { currentPdfUrl=url; document.getElementById('pdfPreviewIframe').src=url; document.getElementById('pdfPreviewModal').classList.add('active'); }
+        function closePdfPreview() { document.getElementById('pdfPreviewModal').classList.remove('active'); document.getElementById('pdfPreviewIframe').src=''; }
+        function downloadCurrentPdf() { window.open(currentPdfUrl,'_blank'); }
+        
+        async function exportAllToPDF() { 
+            if (userNiveau < 5) { showNotification('Permission insuffisante pour exporter', 'error'); return; }
+            document.getElementById('exportStatus').innerHTML='Génération...'; 
+            try{ const res=await fetch('/api/export/pdf',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({courrier_ids:[]})}); const data=await res.json(); if(data.success){ document.getElementById('exportStatus').innerHTML=`<a href="${data.pdf_url}" target="_blank">📄 Télécharger PDF</a>`; previewPdf(data.pdf_url); showNotification('PDF généré','success'); } else document.getElementById('exportStatus').innerHTML='❌ Erreur'; } catch(e){document.getElementById('exportStatus').innerHTML='❌ Erreur';} }
+        async function archiveAuto() { try{ const res=await fetch('/api/archive/auto',{method:'POST',credentials:'include'}); const data=await res.json(); if(data.success){showNotification(data.message,'success');loadCourriers();} } catch(e){showNotification('Erreur','error');} }
+
+        // ==================== GRAPHIQUES MATPLOTLIB ====================
+        async function loadMatplotlibCharts() {
+            try {
+                const response = await fetch('/api/stats/dashboard-charts', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Erreur de chargement');
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.message || 'Erreur inconnue');
+                }
+                
+                // Mettre à jour les stats
+                if (data.total_courriers) {
+                    document.getElementById('statTotal').textContent = data.total_courriers;
+                }
+                if (data.statuts) {
+                    document.getElementById('statEnAttente').textContent = data.statuts.en_attente || 0;
+                    document.getElementById('statTraites').textContent = data.statuts.traite || 0;
+                    document.getElementById('statUrgents').textContent = data.statuts.urgent || 0;
+                }
+                
+                // Afficher les graphiques matplotlib
+                const container = document.getElementById('matplotlibCharts');
+                const charts = data.charts || {};
+                
+                // Configuration des graphiques (SANS DOUBLES ICÔNES)
+                const chartConfigs = [
+                    { key: 'statut', title: '📊 Répartition par statut', icon: 'fa-chart-bar' },
+                    { key: 'priorite', title: '⚠️ Répartition des priorités', icon: 'fa-exclamation-triangle' },
+                    { key: 'par_mois', title: '📅 Courriers par mois', icon: 'fa-calendar' },
+                    { key: 'par_service', title: '🏢 Courriers par service', icon: 'fa-users' },
+                    { key: 'priorite_vs_statut', title: '📈 Priorité vs Statut', icon: 'fa-chart-pie' },
+                    { key: 'scan_size', title: '📎 Taille des scans', icon: 'fa-file-image' },
+                    { key: 'correlation', title: '🔗 Matrice de corrélation', icon: 'fa-link' },
+                    { key: 'evolution', title: '📉 Évolution temporelle', icon: 'fa-chart-line' }
+                ];
+                
+                const availableCharts = chartConfigs.filter(c => charts[c.key]);
+                
+                if (availableCharts.length === 0) {
+                    container.innerHTML = `
+                        <div style="grid-column: 1/-1; text-align:center; padding:40px; background:white; border-radius:20px; border:1px solid #eef2f6;">
+                            <i class="fas fa-chart-simple fa-4x text-muted mb-3"></i>
+                            <h4>Aucune donnée disponible pour les graphiques avancés</h4>
+                            <p class="text-muted">Ajoutez des courriers pour voir les statistiques détaillées</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Générer les cartes (SANS DOUBLES ICÔNES)
+                let html = '';
+                availableCharts.forEach(config => {
+                    html += `
+                        <div class="chart-card">
+                            <h3>
+                                <i class="fas ${config.icon}" style="color: #7c3aed;"></i>
+                                ${config.title}
+                            </h3>
+                            <img src="data:image/png;base64,${charts[config.key]}" 
+                                 alt="${config.title}" 
+                                 loading="lazy"
+                                 style="width:100%; height:auto; border-radius:12px;">
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Erreur chargement graphiques matplotlib:', error);
+                const container = document.getElementById('matplotlibCharts');
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align:center; padding:40px; background:white; border-radius:20px; border:1px solid #eef2f6;">
+                        <i class="fas fa-exclamation-circle fa-4x text-danger mb-3"></i>
+                        <h4>Erreur de chargement des graphiques</h4>
+                        <p class="text-muted">${error.message}</p>
+                        <button class="btn-add mt-3" onclick="loadMatplotlibCharts()" style="padding:8px 20px;">
+                            <i class="fas fa-redo me-2"></i> Réessayer
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // ==================== UTILITAIRES ====================
+        function viewCourrier(id) { const c = allCourriers.find(c=>c.id===id); if(c) alert(`📄 Courrier #${c.id}\nExpéditeur: ${c.expediteur}\nObjet: ${c.objet}\nDate: ${c.date_reception}\nPriorité: ${c.priorite}\nStatut: ${c.statut}\nContenu: ${c.contenu || 'Non renseigné'}`); }
+        function viewCourrierDetail(id) { viewCourrier(id); }
+        function editCourrier(id) { openEditModal(id); }
+        function quickTraiterCourrier(id) { openTraiterModalWithData(id); }
+        async function loadNotifications() { try { const res = await fetch('/api/assignations/notifications', { credentials:'include' }); const data = await res.json(); if(data.success) { const notifCount = document.getElementById('notifCount'); if(data.total>0){notifCount.textContent=data.total>9?'9+':data.total;notifCount.style.display='inline-block';} else notifCount.style.display='none'; } } catch(e){console.error(e);} }
+        function showNotifications() { fetch('/api/assignations/notifications',{credentials:'include'}).then(r=>r.json()).then(data=>{ document.getElementById('notificationsList').innerHTML = data.success && data.notifications.length ? data.notifications.map(n=>`<div style="padding:10px; border-bottom:1px solid #eee;"><strong>${n.type==='assignation'?'📨 Nouvelle assignation':'✅ Traitement terminé'}</strong><p>${n.message}</p><small>${n.created_at}</small></div>`).join('') : '<p>Aucune notification</p>'; document.getElementById('notificationsModal').classList.add('active'); }); }
+        function escapeHtml(t) { if(!t) return ''; const div = document.createElement('div'); div.textContent = t; return div.innerHTML; }
+        function showNotification(msg, type) { const n = document.createElement('div'); n.className = `notification ${type}`; n.textContent = msg; document.body.appendChild(n); setTimeout(()=>n.remove(),3000); }
+        async function logout() { await fetch('/api/logout', { method:'POST', credentials:'include' }); window.location.href = '/'; }
+        function previousPage() { if(currentPage>1){currentPage--;loadCourriers();} }
+        function nextPage() { if(currentPage<totalPages){currentPage++;loadCourriers();} }
+        function closeAssignModal() { document.getElementById('assignModal').classList.remove('active'); }
+        function closeTraiterModal() { document.getElementById('traiterModal').classList.remove('active'); document.getElementById('traiterComment').value = ''; }
+        function closeNotificationsModal() { document.getElementById('notificationsModal').classList.remove('active'); }
+        function closeMultipleTraiterModal() { document.getElementById('multipleTraiterModal').classList.remove('active'); document.getElementById('traiterMultipleComment').value = ''; }
+        
+        function setupTabs() {
+            document.querySelectorAll('.menu-item').forEach(item=>{
+                item.addEventListener('click',()=>{ 
+                    const tabId=item.dataset.tab; 
+                    document.querySelectorAll('.menu-item').forEach(i=>i.classList.remove('active')); 
+                    item.classList.add('active'); 
+                    document.querySelectorAll('.tab-content').forEach(tab=>tab.classList.remove('active')); 
+                    const targetTab = document.getElementById(`${tabId}Tab`); 
+                    if(targetTab) targetTab.classList.add('active'); 
+                    if(tabId==='courriers') loadCourriers(); 
+                    if(tabId==='assignation' && userNiveau>=8) loadPendingCourriers(); 
+                    if(tabId==='traitement' && userNiveau>=8) loadTraitementCourriers(); 
+                    if(tabId==='statistiques' && userNiveau>=8) {
+                        loadStats();
+                        setTimeout(loadMatplotlibCharts, 300);
+                    }
+                    if(tabId==='analytics' && userNiveau>=8){loadAdvancedAnalytics();loadMLPredictions();} 
+                    if(tabId==='audit' && userNiveau>=10) loadAuditLogs(); 
+                }); 
+            });
+        }
+        
+        loadAllData();
+    </script>
+</body>
+</html>
